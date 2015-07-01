@@ -5,7 +5,7 @@ This is a linear program solver.  I wrote it as a graduate student.  It comes
 in two parts.
 
  - The `lp` program solves the linear program on stdin using an interior-point
-   method.
+   method and prints to stdout information about its progress.
  - The `lp_canon` program convert the linear program in
    [GNU LP format](https://www.gnu.org/software/glpk) on stdin to the format
    accepted by `lp`.
@@ -34,15 +34,17 @@ Type `make lp lp_canon` to build both programs.  You will probably need to hack 
 The solver depends on
 [SuiteSparse](http://faculty.cse.tamu.edu/davis/suitesparse.html) and
 [OpenBLAS](https://github.com/xianyi/OpenBLAS).  As configured, the build
-process also depends on SuiteSparse being built with METIS support; however,
-this can be disabled by removing `-lmetis` from the `CHOLMOD_FLAGS` definition.
+process also depends on SuiteSparse being built with
+[METIS](http://glaros.dtc.umn.edu/gkhome/metis/metis/overview) support;
+however, this can be disabled by removing `-lmetis` from the `CHOLMOD_FLAGS`
+definition.
 
 The solver *requires* OpenBLAS.  There is a dirty hack at the bottom of
 `cholmod.cc` where I override how base-case Cholesky factorisation is done.
 The only immediately-visible symptom of linking against a different BLAS might
 be an undefined reference error for `openblas_set_num_threads`.  You can remedy
 this by deleting the call to that function, but Cholesky factorisation will
-behave differently.
+behave differently and the solver might bomb out prematurely.
 
 Input format
 ------------
@@ -123,3 +125,38 @@ If you were hoping to recover the solution to your problem, a little bit of
 work needs to be done inside the code to make that possible.  Somewhere in
 `cholmod.cc`, the matrix `A` is permuted.  You need to keep track of that
 permutation and apply its inverse before reading off the entries of `x`.
+
+Running the code
+----------------
+
+Given an MPS file and a (working) installation of GLPK, you can get a GNU LP
+file via the incantation
+
+    glpsol --nomip --check --mps foo.mps --wglp foo.glp
+
+Then, after successfully building this package, you can solve it via the
+incantation
+
+    lp_canon < foo.glp | lp --no-stale
+
+The solver `lp` accepts a number of arguments:
+
+ - `--no-stale`:  Disables "stale steps," which use an old Cholesky
+   factorisation to find search directions at the current iterate.  Also
+   sets a longer default Mehrotra step length.
+ - `--max-stale=42`:  Do 42 stale steps with each Cholesky factorisation.
+ - `--meh-neigh=0.987`:  Go a fraction 0.987 of the distance to the boundary to
+   step when doing a Mehrotra step.
+ - `--stale-neigh=0.678`: Go a fraction 0.678 of the distance to the boundary
+   with each stale step.
+ - `--no-stale-corr`/`--stale-corr`:  Enable/disable the "stale corrector."
+ - `--no-rebuild-factor`/`--rebuild-factor`:  Enable/disable rebuilding the
+   Cholesky factor in blocked form.
+ - `--no-simplicial-factor`/`--simplicial-factor`:  Enable/disable converting
+   CHOLMOD's supernodal factor to simplicial.
+
+Simply running `lp` with no arguments will crash.  This is because I haven't
+yet made the "stale steps", which are enabled by default, work with either of
+CHOLMOD's data structures.  Disabling the "stale steps" or building the blocked
+supernodal factor remedies this problem.
+
