@@ -1,12 +1,12 @@
 Overview
 --------
 
-This is a linear program solver.  I wrote it as a graduate student.  It comes
-in two parts.
+This is a linear program solver.  It's reasonably quick, but it's decidedly
+research-grade.  I wrote it as a graduate student.  It comes in two parts.
 
  - The `lp` program solves the linear program on stdin using an interior-point
    method and prints to stdout information about its progress.
- - The `lp_canon` program convert the linear program in
+ - The `lp_canon` program converts the linear program in
    [GNU LP format](https://www.gnu.org/software/glpk) on stdin to the format
    accepted by `lp`.
 
