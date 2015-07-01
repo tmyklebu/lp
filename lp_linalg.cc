@@ -1,6 +1,6 @@
 /*
 Tor Myklebust's LP solver
-Copyright (C) 2013-2015 Tor Myklebust
+Copyright (C) 2013-2015 Tor Myklebust (tmyklebu@csclub.uwaterloo.ca)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
