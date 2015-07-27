@@ -1082,7 +1082,7 @@ extern "C" {
     double *aoffset = a;
     const double eps = 1e-75;
     FOR(j, n) {
-      double ajj = aoffset[j] - ddot_k(j, a+j, lda, a+j, lda);
+      double ajj = aoffset[j] - cblas_ddot(j, a+j, lda, a+j, lda);
       double scalby;
       if (ajj < eps) {
         ajj = 1e75;
@@ -1096,12 +1096,12 @@ extern "C" {
   
       int i = n - j - 1;
       if (i > 0) {
-        dgemv_n(i, j, 0, -1,
-                a + j + 1, lda,
-                a + j, lda,
-                aoffset + j + 1, 1, sb);
-        dscal_k(i, 0, 0, scalby,
-                aoffset + j + 1, 1, 0, 0, 0, 0);
+        cblas_dgemv(CblasColMajor, CblasNoTrans,
+                    i, j, -1,
+                    a + j + 1, lda,
+                    a + j, lda, 1,
+                    aoffset + j + 1, 1);
+        cblas_dscal(i, scalby, aoffset + j + 1, 1);
       }
       aoffset += lda;
       potrf_current_row++;
